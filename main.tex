@@ -38,7 +38,7 @@
 \newtheorem{corollary}{Corollary}
 \newenvironment{example}[1][]{\refstepcounter{example}\par\medskip
    \noindent \textbf{Example~\theexample. #1} \rmfamily}{\medskip}
-\newcounter{example}{Example}
+\newcounter{example}[Example]
       
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
@@ -247,7 +247,19 @@ One \boxed{\textbf{epoch}} is a time span when an entire training dataset is pas
 \end{definition}
 
 \begin{definition}
+In \boxed{\textbf{convolutional layer}}, multiple channels of feature maps were extracted by sliding the trainable convolutional kernels across the input feature maps.
+\end{definition}
+
+\begin{definition}
+\boxed{\textbf{Max pooling layer}} is a way to reduce the image sizes, to provide an abstracted form of the representation, to reduce the computational cost and to promote spatial invariance of the network.
+\end{definition}
+
+\begin{definition}
 \boxed{\textbf{Fully-connected input layer}} takes the output of the previous layers, ``flattens'' them and turns them into a single vector that can be an input for the next stage.
+\end{definition}
+
+\begin{definition}
+\boxed{\textbf{Dropout layer}} is used to alleviate data overfitting.
 \end{definition}
 
 \begin{table}[H]
@@ -413,6 +425,7 @@ we can have the KL divergence
 \end{example}
 
 \subsection{Normalization}
+Normalization is used to reduce internal covariate shift among the training samples.
 \begin{definition}
 \boxed{\textbf{Batch normalization}}\cite{batch} is defined as
 \begin{align*}
