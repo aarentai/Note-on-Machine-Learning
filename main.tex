@@ -214,6 +214,156 @@ Given a sequence of i.i.d. random variables $\{X_1,\cdots,X_n\}$, we randomly pi
 \end{align*}
 \end{definition}
 
+\begin{definition}
+\boxed{\textbf{Principal components analysis(PCA)}} seeks a sequence of linear subspaces that maximize the variance of the data, the intent of which is to find an orthonormal basis $\{e_1,\cdots,e_k\}$ of a set of points $\{S^1,\cdots,S^n\}\in\mathbb{R}^d$, and the new basis is of the same dimension $d$ as the original space, which satisfies the recursive relationship
+\begin{align*}
+    e_1&=\argmax_{\|e\|=1}\sum^n_{i=1}\langle e,S^i\rangle^2\\
+    e_2&=\argmax_{\|e\|=1}\sum^n_{i=1}[\langle e_1,S^i\rangle^2+\langle e,S^i\rangle^2]\\
+    \vdots\\
+    e_k&=\argmax_{\|e\|=1}\sum^n_{i=1}[\langle e_1,S^i\rangle^2+\cdots+\langle e_{k-1},S^i\rangle^2+\langle e,S^i\rangle^2]
+\end{align*}
+In other words, the subspace $V_k=\operatorname{span}(\{e_1,\cdots,e_k\})$ is the $k$-dimensional subspace that maximizes the variance of the data projected to the subspace. The basis $\{e_i\}$ is computed as the set of ordered eigenvectors of the sample covariance matrix of the data.
+\end{definition}
+
+\begin{remark}
+Concatenating all the feature vector together as a matrix, using SVD to decompose the matrix is a common way of performing PCA.
+\end{remark}
+
+\begin{example}
+Given a dataset $S=\{S^1,\cdots,S^n\}$ of $n$ samples, where $S^i\in\mathbb{R}^d$ and $\Bar{S}$ is the mean of the dataset $S$
+\begin{equation*}
+    S^i=
+    \begin{pmatrix}
+        s^i_1\\
+        \vdots\\
+        s^i_d
+    \end{pmatrix},
+    \Bar{S}=
+    \begin{pmatrix}
+        \Bar{s}_1\\
+        \vdots\\
+        \Bar{s}_d
+    \end{pmatrix}.
+\end{equation*}
+Then we can have a $d\times d$ covariance matrix $\Sigma$
+\begin{equation*}
+    \Sigma=
+    \begin{pmatrix}
+        \operatorname{cov}(s_1,s_1) & \cdots & \operatorname{cov}(s_1,s_d)\\
+        \vdots &  \ddots &  \vdots \\
+        \operatorname{cov}(s_d,s_1) & \cdots & \operatorname{cov}(s_d,s_d)
+    \end{pmatrix}=
+    \begin{pmatrix}
+        \text{cov of $1^{st}$ and $1^{st}$ dim} & \cdots & \text{cov of $1^{st}$ and $d^{th}$ dim}\\
+        \vdots &  \ddots &  \vdots \\
+        \text{cov of $d^{th}$ and $1^{st}$ dim} & \cdots & \text{cov of $d^{th}$ and $d^{th}$ dim}
+    \end{pmatrix},
+\end{equation*}
+where
+\begin{equation*}
+    \operatorname{cov}(s_j,s_k)=\frac{\sum^n_{i=1}(s^i_j-\Bar{s}_j)(s^i_k-\Bar{s}_k)}{n}.
+\end{equation*}
+To form a reduced dimension space $S'$, simply pick the largest $k$ eigenvalues of the covariance matrix above and the corresponding eigenvectors and the new dataset $S'$ is formed as below
+\begin{equation*}
+    \underbrace{
+    \begin{pmatrix}
+        S'^1 & \cdots & S'^n
+    \end{pmatrix}}_{k\times n}=
+    \underbrace{
+    \begin{pmatrix}
+        e^T_1\\
+        \vdots\\
+        e^T_p
+    \end{pmatrix}}_{k\times d}\cdot
+    \underbrace{
+    \begin{pmatrix}
+        S^1 & \cdots & S^n
+    \end{pmatrix}}_{d\times n}
+\end{equation*}
+\end{example}
+
+\begin{definition}
+\boxed{\textbf{Autoencoder}} is a type of artificial neural network used to learn efficient data codings in an unsupervised(do not require labeled inputs to enable learning) manner. It is constituted by two main parts: an encoder that maps the input into the code(latent variable), and a decoder that maps the code(latent variable) to a reconstruction of the input.
+\begin{align*}
+    \phi &:{\mathcal {X}}\rightarrow {\mathcal {F}}\\
+    \psi &:{\mathcal {F}}\rightarrow {\mathcal {X}}\\
+    \phi ,\psi &={\underset {\phi ,\psi }{\operatorname {arg\,min} }}\,\|X-(\psi \circ \phi )X\|^{2} && \triangleright \text{loss function}
+\end{align*}
+\end{definition}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.35]{figure/origdata.png}
+    \includegraphics[scale=0.35]{figure/pca.png}
+    \includegraphics[scale=0.35]{figure/ae.png}
+    \caption{From left to right: 2D original distribution, distribution recovered by PCA and distribution recovered by autoencoder. Since the original feature space is 2D, namely the covariance matrix of the distribution is of $2\times 2$, which means the distribution would be 1D after dimension reduction, and this is reason why the distribution recovered by PCA is totally linear.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{figure/origdata3d.png}
+    \includegraphics[scale=0.4]{figure/pca3d.png}
+    \includegraphics[scale=0.4]{figure/ae3d.png}
+    \caption{From left to right: 3D original distribution, distribution recovered by PCA and distribution recovered by autoencoder. Since the original feature space is 3D, which means the distribution would be 2D after dimension reduction, and this is reason why the distribution recovered by PCA looks like a plane.}
+\end{figure}
+
+\begin{remark}
+Relationship between \textbf{PCA} and \textbf{autoencoder}\footnote{\url{https://github.com/muaz-urwa/PCA-vs-AutoEncoders/blob/master/PCAvsAE.ipynb}}:
+\begin{itemize}
+    \item PCA is essentially a linear transform method while autoencoders are capable of modeling non-linear complex functions.
+    \item Features in PCA are linearly uncorrelated with each other, as they are orthogonal. While the autoencoded features may have correlations since they are just trained for accurate reconstruction.
+    \item PCA is faster and computational cheap compared to autoencoder.
+    \item Autoencoder is prone to overfitting due to large amount of parameters.
+\end{itemize}
+\end{remark}
+
+\begin{example}
+\texttt{PyTorch} implementation of autoencoder:
+\begin{verbatim}
+    class AutoEncoder(nn.Module):
+    def __init__(self):
+        super(AutoEncoder, self).__init__()
+
+        self.encoder = nn.Sequential(
+            nn.Linear(28*28, 128),
+            nn.Tanh(),
+            nn.Linear(128, 64),
+            nn.Tanh(),
+            nn.Linear(64, 12),
+            nn.Tanh(),
+            nn.Linear(12, 3),   # compress to 3 features which can be visualized in plt
+        )
+        self.decoder = nn.Sequential(
+            nn.Linear(3, 12),
+            nn.Tanh(),
+            nn.Linear(12, 64),
+            nn.Tanh(),
+            nn.Linear(64, 128),
+            nn.Tanh(),
+            nn.Linear(128, 28*28),
+            nn.Sigmoid(),       # compress to a range (0, 1)
+        )
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return encoded, decoded
+\end{verbatim}
+\end{example}
+
+\begin{example}
+Different types of autoencoders:
+\begin{itemize}
+    \item \textbf{Sparse autoencoder}\footnote{\url{https://web.stanford.edu/class/cs294a/sparseAutoencoder.pdf}} constraints most of the hidden units inactivive(close to 0) by adding a regularization term to the loss function
+    \begin{align*}
+        L(x,\hat{x})&+\lambda\sum_i\∣a^{(h)}_i\∣&&\triangleright\text{$L^1$ regularization}\\
+        L(x,\hat{x})&+\sum_j D_{\operatorname{KL}}(\rho,\rho_j)&&\triangleright\text{KL divergence regularization}
+    \end{align*}
+    where $a^{(h)}_i$ is the activation output of $h$-th layer's hidden unit $i$, $\rho$ is the sparsity parameter which is typically preset as a small value close to 0 and $\rho_j$ denotes the average activation of hidden unit $j$(averaging over all training data).
+    \item \textbf{Denoising autoencoder}'s input is the noised original data, and its output should be the noise-free original data.
+\end{itemize}
+\end{example}
+
 \newpage
 \section{Deep Learning}
 \subsection{Common terms}
@@ -293,6 +443,8 @@ FC                                 & {[}1x1x1000{]}                    & 1000   
 \end{tabular}
 \end{table}
 
+% \subsection{\texttt{PyTorch} functions}
+
 \subsection{Loss Functions}
 \begin{definition}
 \boxed{\textbf{Intersection of Union(Jaccard index, IoU)}} is defined as 
@@ -315,19 +467,36 @@ Since dice loss function is a loss function, just as other loss function, lower 
 
 \begin{definition}
 \boxed{\textbf{$L^1$ loss function}} is defined as 
-\begin{equation*}
-    L_{L^1}=\|v_{\operatorname{true}}-v_{\operatorname{pred}}\|_1,
-\end{equation*}
+\begin{align*}
+    L_{L^1}&=\|v_{\operatorname{true}}-v_{\operatorname{pred}}\|_1,\\
+    &=\sum _{i=1}^{n}|v_i^{\operatorname{pred}}-v_i^{\operatorname{true}}|,
+\end{align*}
 where $v_{\operatorname{true}},v_{\operatorname{pred}}$ are vectors.
 \end{definition}
 
 \begin{definition}
 \boxed{\textbf{$L^2$ loss function}} is defined as 
-\begin{equation*}
-    L_{L^2}=\|v_{\operatorname{true}}-v_{\operatorname{pred}}\|^2_2,
-\end{equation*}
+\begin{align*}
+    L_{L^2}&=\|v_{\operatorname{true}}-v_{\operatorname{pred}}\|^2_2,\\
+    &=\sqrt{\sum _{i=1}^{n}(v_i^{\operatorname{pred}}-v_i^{\operatorname{true}})^{2}}^2,\\
+    &=\sum _{i=1}^{n}(v_i^{\operatorname{pred}}-v_i^{\operatorname{true}})^{2},
+\end{align*}
 where $v_{\operatorname{true}},v_{\operatorname{pred}}$ are vectors.
 \end{definition}
+
+\begin{definition}
+\boxed{\textbf{Mean squared error(MSE) loss function}} is defined as 
+\begin{equation*}
+    L_{\operatorname {MSE}} ={\frac {1}{n}}\sum _{i=1}^{n}(v_i^{\operatorname{pred}}-v_i^{\operatorname{true}})^{2}.
+\end{equation*}
+\end{definition}
+
+\begin{remark}
+% Basically, the  is the squared , while the MSE loss is the averaged $L^2$ loss.
+\begin{equation*}
+    L^2\text{ norm}\xrightarrow{squared}L^2\text{ loss}\xrightarrow{averaged}\text{MSE loss}
+\end{equation*}
+\end{remark}
 
 \begin{definition}
 \boxed{\textbf{Hausdorff distance}} is defined as 
@@ -380,7 +549,7 @@ $q$           & 0.1     & 0.2     & 0.7        \\ \hline
 \end{table}
 we can have the cross entropy 
 \begin{equation*}
-    H(p,q)=-(0\times\log(0.1)+0\times\log(0.2)+0\times\log(0.7))=0.35
+    H(p,q)=-(0\times\log(0.1)+0\times\log(0.2)+1\times\log(0.7))=0.15
 \end{equation*}
 \end{example}
 
@@ -399,7 +568,8 @@ According to the example above, the only thing that contributes to the value of 
 \begin{align*}
     D_{\text{KL}}(p,q)&=\sum _{x\in {\mathcal {X}}}p(x)\log \left({\frac {p(x)}{q(x)}}\right)\\
     &=-\sum _{x\in {\mathcal {X}}}p(x)\log q(x)+\sum _{x\in {\mathcal {X}}}p(x)\log p(x)\\
-    &=-H(p,q)+H(p)\in[0,\infty),
+    &=-H(p,q)+H(p)\in[0,\infty)\\
+    &=\operatorname{entropy}-\text{cross entropy},
 \end{align*}
 \end{definition}
 
@@ -415,14 +585,63 @@ As for the two discrete distributions below:
 \hline
 \textbf{Distribution} & \textbf{Class A} & \textbf{Class B} & \textbf{Class C} \\ \hline
 $p$            & 0       & 0       & 1    \\ 
-$q$           & 0.1     & 0.2     & 0.7        \\ \hline
+$q_1$           & 0.1     & 0.2     & 0.7        \\ 
+$q_2$           & $1-1^{-\infty}$     & 0     & $1^{-\infty}$        \\ \hline
 \end{tabular}
 \end{table}
 we can have the KL divergence
 \begin{equation*}
-    D_{\operatorname{KL}}(p,q)=(0\times\log(0)+0\times\log(0)+1\times\log(1))-(0\times\log(0.1)+0\times\log(0.2)+0\times\log(0.7))=0.35
+    D_{\operatorname{KL}}(p,q_1)=(0\times\log(0)+0\times\log(0)+1\times\log(1))-(0\times\log(0.1)+0\times\log(0.2)+1\times\log(0.7))=0.15
 \end{equation*}
+When the two distribution are very far away just like $p,q_2$, $D_{\operatorname{KL}}(p,q_2)=\infty$, which is meaningless.
 \end{example}
+
+\begin{definition}
+\boxed{\textbf{Jensen–Shannon(JS) divergence}} is defined as
+\begin{align*}
+    D_{\text{JS}}(p,q)&=\frac{1}{2}D_{\text{KL}}(p,\frac{1}{2}(p+q))+\frac{1}{2}D_{\text{KL}}(q,\frac{1}{2}(p+q))
+\end{align*}
+\end{definition}
+
+\begin{definition}
+\boxed{\textbf{Wasserstein distance}} is defined as 
+\begin{align*}
+    W_{p}(\mu ,\nu )&=\left(\inf _{\gamma \in \Gamma (\mu ,\nu )}\int _{M\times M}\mathrm{dist}(x,y)^{p}\,\mathrm {d} \gamma (x,y)\right)^{1/p},\\
+    &=\left(\inf _{\gamma \in \Gamma (\mu ,\nu )}\int _{M\times M}\mathrm{dist}(x,y)^{p}\gamma (x,y)\mathrm {d}x\mathrm {d}y\right)^{1/p},\\
+    W_{2}(\mu ,\nu )&=\left(\inf _{\gamma \in \Gamma (\mu ,\nu )}\int _{M\times M}\mathrm{dist}(x,y)^{2}\gamma (x,y)\mathrm {d}x\mathrm {d}y\right)^{1/2},
+\end{align*}
+where $\Gamma(\mu,\nu)$ denotes the set of all coupling of marginal distribution $\mu$ and $\nu$, and $x, y$ are actually indicating the position in the respective distribution.
+\end{definition}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.15]{figure/Transport-plan.png}
+    \caption{Wasserstein distance}
+\end{figure}
+
+\begin{remark}
+Wasserstein distance is closely related to optimal transport problem. That is, for two distributions of mass $\mu(x),\nu(y)$ in the space $S$, where $x,y\in S$, we wish to transport the mass at the lowest cost. The problem only makes sense when the sums of two distributions are identical, fortunately $\mu(x),\nu(y)$ are two probability distributions, namely the sum of mass equals to 1, this premise will be satisfied.
+
+Assuming there is also a cost function $c(x,y)\rightarrow[0,+\infty)$ which indicates the cost of transporting \textbf{unit mass} from point $x$ to point $y$. Function $\gamma(x,y)$ depicts a transport plan which gives the amount of mass moved from point $x$ to point $y$. 
+% In order to make this plan meaningful, it should satisfy the following properties
+% \begin{align*}
+%     \int\gamma(x,y)dx=\nu(y)\\
+%     \int\gamma(x,y)dy=\mu(x)
+% \end{align*}
+Therefore, the cost of the whole transport plan equals to
+\begin{equation*}
+    \int\int c(x,y)\gamma(x,y)dxdy,
+\end{equation*}
+and the Wasserstein distance is exactly the cost of optimal transport plan.
+\end{remark}
+
+\begin{remark}
+Relationship between \textbf{KL divergence}, \textbf{JS divergence} and \textbf{Wasserstein distance}:
+\begin{itemize}
+    \item Intuitively, KL divergence looks like a distance between two distributions, however $D_{\text{KL}}(p,q)\not=D_{\text{KL}}(q,p)$, namely it is asymmetric. So comes the JS divergence.
+    \item When the two distributions are far apart, the KL divergence cannot reflect the distance between the distributions while JS divergence is constant, which is deadly for backpropagation in neural network. Nevertheless, the Wasserstein distance can tackle this drawback of KL/JS divergence, as the optimal transport plan of two distant distributions would always make sense and variable.
+\end{itemize}
+\end{remark}
 
 \subsection{Normalization}
 Normalization is used to reduce internal covariate shift among the training samples.
@@ -487,11 +706,12 @@ where $x$ are the values of input over a mini-batch, $C,N,H,W,|G|$ are the chann
 \hline
 \textbf{Types}                    & \textbf{Functions}                                       & \textbf{Range}                                           & \textbf{Order of continuity} \\ \hline
 Sigmoid(logistic)        & $\sigma(x)=\frac {1}{1+e^{-x}}$               & $(0,1)$  & $C^\infty$\\
-Tanh(hyperbolic tangent) & $\tanh(x)={\frac {e^{x}-e^{-x}}{e^{x}+e^{-x}}}$ & $(-1,1)$   & $C^\infty$\\
+Tanh(hyperbolic tangent) & $\tanh(x)={\frac {e^{x}-e^{-x}}{e^{x}+e^{-x}}}$ & $(-1,1)$   & $C^\infty$\\ \hline
 ReLU(rectified linear unit)  & $\operatorname{ReLU}(x)=\max\{0,x\}$            & $[0,+\infty)$    & $C^0$\\       
 Leaky ReLU               & $\operatorname{Leaky ReLU}(x)=\max\{0.01x,x\}$  & $(-\infty,+\infty)$ & $C^0$\\
 ELU(exponential linear unit)& ${\begin{cases}\alpha \left(e^{x}-1\right)&{\text{if }}x\leq 0\\x&{\text{if }}x>0\end{cases}}$ & $(-\alpha,+\infty)$ & $\begin{cases}C^{1}&{\text{if }}\alpha =1\\C^{0}&{\text{otherwise}}\end{cases}$\\ 
 GELU(gaussian error linear unit)& $\begin{aligned}&{\frac {1}{2}}x\left(1+{\text{erf}}\left({\frac {x}{\sqrt {2}}}\right)\right)\end{aligned}$ & $(-0.17,+\infty)$ & $C^\infty$\\
+Smooth ReLU(Softplus) & \ln(1+e^{x}) &$(0,+\infty)$ & $C^\infty$\\
 \hline
 \end{tabular}
 \end{table}
@@ -504,7 +724,8 @@ GELU(gaussian error linear unit)& $\begin{aligned}&{\frac {1}{2}}x\left(1+{\text
     \includegraphics[scale=0.6]{figure/leakyrelu.png}
     \includegraphics[scale=0.6]{figure/elu.png}
     \includegraphics[scale=0.08]{figure/gelu.png}
-    \caption{Plots of sigmoid, tahn, ReLU, Leaky ReLU, ELU, GELU activation functions, correspondingly.}
+    \includegraphics[scale=0.11]{figure/softplus.png}
+    \caption{Plots of sigmoid, tahn, ReLU, Leaky ReLU, ELU, GELU, softplus activation functions, correspondingly.}
 \end{figure}
 
 The following table lists activation functions that are not functions of a single fold $x$ from the previous layer or layers:
@@ -528,7 +749,81 @@ Activation functions have different mathematical properties:
 \end{itemize}
 \end{remark}
 % \subsection{Data Augmentation}
+\section{Applications}
+\subsection{Deep Learning for Solving Partial Differential Equation}
+\paragraph{Overview.} When we are talking about a deep neural network, the first thing that comes to my mind is that the input/output of the network can be a image. However, in this chapter, we will learn that the neural network can also be a ``image'', in view of the function/mapping nature of a network, whose input and output are the coordinates and pixel value, respectively.
+\subsubsection{PINN\footnote{\url{https://www.osti.gov/servlets/purl/1595805}}}
+In one space dimension, the Burger’s equation along with Dirichlet boundary conditions reads as
+\begin{align*}
+    u_t+uu_x-\frac{0.01}{\pi}u_{xx}=0 && x\in[-1,1], t\in[0,1]\\
+    u(0,x)=-\sin(\pi x)\\
+    u(t,-1)=u(t,1)=0
+\end{align*}
+where $u(t,x):\mathbb{R}^2\rightarrow\mathbb{R}$. Let us define $f(t,x):\mathbb{R}^2\rightarrow\mathbb{R}$ to be given by
+\begin{equation*}
+    f(t,x)=u_t+uu_x-\frac{0.01}{\pi}u_{xx}
+\end{equation*}
+followed by approximating $u(t,x)$ by a deep neural network. Following is a \texttt{TensorFlow} snippet which highlight the simplicity of this idea:
+\begin{verbatim}
+    def u(t, x):
+        u = neural_net(tf.concat([t,x],1), weights, biases)
+        return u
+        
+    def f(t, x):
+        u = u(t, x)
+        u_t = tf.gradients(u, t)[0]
+        u_x = tf.gradients(u, x)[0]
+        u_xx = tf.gradients(u_x, x)[0]
+        f = u_t + u*u_x - (0.01/tf.pi)*u_xx
+        return f
+\end{verbatim}
 
+The shared parameters between the neural networks $u(t, x)$ and $f(t, x)$ can be learned by minimizing the mean squared error loss
+\begin{align*}
+    \operatorname{Loss}(\theta)&=\operatorname{MSE}_u+\operatorname{MSE}_f\\
+    \operatorname{MSE}_u&=\frac{1}{N_u}\sum^{N_u}_{i=1}|u(t^i_u,x^i_u)-u^i|^2\\
+    \operatorname{MSE}_f&=\frac{1}{N_u}\sum^{N_u}_{i=1}|f(t^i_u,x^i_u)-0|^2
+\end{align*}
+Here, $\{t^i_u,x^i_u,u^i\}^{N_u}_{i=1}$ denotes the initial and boundary(cross mark in Figure~\ref{fig:pde}) training data on $u(t,x)$ and $\{t^i_f,x^i_f\}^{N_f}_{i=1}$ specify the collocations points for $f(t,x)$.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{figure/pde.jpg}
+    \caption{Solved two variables function: $u(t,x)$}
+    \label{fig:pde}
+\end{figure}
+
+\begin{remark}
+Neural network presents function $u$ in a \textbf{map}($\mathbb{R}^2\rightarrow\mathbb{R}$) manner, which requires a input and an output, while Figure~\ref{fig:pde} presents $u$ in a \textbf{image} manner. Thereby, the neural network can get myriad samples for training process, as the cross marks in figure above show. For the multi-variable functions($\mathbb{R}^n\rightarrow\mathbb{R}, n\le3$), we can regard the deep neural network for solving PDE as a $n$ dimensional \textbf{``image''}.
+\end{remark}
+
+\begin{example}
+The 2D Poisson’s equation reads as
+\begin{equation*}
+    \nabla u=f
+\end{equation*}
+Consequently we can have the code snippet as below
+\begin{verbatim}
+    def u(x, y):
+        u = neural_net(tf.concat([x,y],1), weights, biases)
+        return u
+        
+    def f(x, y):
+        u = u(x, y)
+        u_x = tf.gradients(u, x)[0]
+        u_xx = tf.gradients(u_x, x)[0]
+        u_y = tf.gradients(u, y)[0]
+        u_yy = tf.gradients(u_y, y)[0]
+        f = u_xx + u_yy
+        return f
+\end{verbatim}
+You can regard function $u(x,y), f(x,y)$ happen to be meaningful images, while the neural network is another way to present this function or image.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.2]{figure/camerau.png}
+    \includegraphics[scale=0.2]{figure/cameraf.png}
+    \caption{The recovered function $u(x,y)$ is a meaningful image.}
+\end{figure}
+\end{example}
 
 \newpage
 \begin{thebibliography}{99} 
