@@ -3,6 +3,7 @@
 \usepackage[english]{babel}
 \usepackage[utf8x]{inputenc}
 \usepackage{amsmath,amsthm,enumitem}
+\usepackage{bbm}
 \usepackage{graphicx}
 \usepackage{lscape}
 \usepackage{geometry}
@@ -42,6 +43,7 @@
       
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator\supp{supp}
 \begin{document}
 \maketitle
 
@@ -356,7 +358,7 @@ Different types of autoencoders:
 \begin{itemize}
     \item \textbf{Sparse autoencoder}\footnote{\url{https://web.stanford.edu/class/cs294a/sparseAutoencoder.pdf}} constraints most of the hidden units inactivive(close to 0) by adding a regularization term to the loss function
     \begin{align*}
-        L(x,\hat{x})&+\lambda\sum_i\∣a^{(h)}_i\∣&&\triangleright\text{$L^1$ regularization}\\
+        L(x,\hat{x})&+\lambda\sum_i\lVert a^{(h)}_i\rVert&&\triangleright\text{$L^1$ regularization}\\
         L(x,\hat{x})&+\sum_j D_{\operatorname{KL}}(\rho,\rho_j)&&\triangleright\text{KL divergence regularization}
     \end{align*}
     where $a^{(h)}_i$ is the activation output of $h$-th layer's hidden unit $i$, $\rho$ is the sparsity parameter which is typically preset as a small value close to 0 and $\rho_j$ denotes the average activation of hidden unit $j$(averaging over all training data).
@@ -498,6 +500,10 @@ where $v_{\operatorname{true}},v_{\operatorname{pred}}$ are vectors.
 \end{equation*}
 \end{remark}
 
+\begin{remark}
+Do not confuse mean squared error with least squares function, which is used in linear regression.
+\end{remark}
+
 \begin{definition}
 \boxed{\textbf{Hausdorff distance}} is defined as 
 \begin{equation*}
@@ -559,7 +565,7 @@ According to the example above, the only thing that contributes to the value of 
     \centering
     \includegraphics[scale=0.25]{figure/log.jpg}
     \caption{$y=-\log(x)$}
-    \label{fig:my_label}
+    % \label{fig:my_label}
 \end{figure}
 \end{remark}
 
@@ -611,12 +617,18 @@ When the two distribution are very far away just like $p,q_2$, $D_{\operatorname
     W_{2}(\mu ,\nu )&=\left(\inf _{\gamma \in \Gamma (\mu ,\nu )}\int _{M\times M}\mathrm{dist}(x,y)^{2}\gamma (x,y)\mathrm {d}x\mathrm {d}y\right)^{1/2},
 \end{align*}
 where $\Gamma(\mu,\nu)$ denotes the set of all coupling of marginal distribution $\mu$ and $\nu$, and $x, y$ are actually indicating the position in the respective distribution.
+
+In discrete case, the distance reads as
+\begin{equation*}
+    W_{p}(\mu ,\nu )=\min_{T \in \Gamma (\mu ,\nu )}\langle T,M_{\mu\nu}\rangle=\min_{T \in \Gamma (\mu ,\nu )}\operatorname{tr}(T^TM_{\mu\nu}),
+\end{equation*}
+where $M_{\mu\nu}=[\operatorname{dist}(x_i,y_j)^p]_{ij}\in\mathbb{R}^{m\times n}$ and $\Gamma(\mu,\nu)=\{T\in\mathbb{R}^{m\times n}_{+}|T\mathbbm{1}_m=a,T^T\mathbbm{1}_n=b\}$, namely the transport map matrix $T$ is under the constraint that the sum of each row and column equals to $a$ and $b$, respectively. The two matrices correspond to $\operatorname{dist}(x,y)$ and $\gamma(x,y)$ in continuous form.
 \end{definition}
 
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.15]{figure/Transport-plan.png}
-    \caption{Wasserstein distance}
+    \caption{Wasserstein distance, credits to Wikipedia}
 \end{figure}
 
 \begin{remark}
@@ -635,11 +647,83 @@ Therefore, the cost of the whole transport plan equals to
 and the Wasserstein distance is exactly the cost of optimal transport plan.
 \end{remark}
 
+\begin{lemma}
+The $p$-Wasserstein distance between the two probability measures $\mu$ and $\nu$ on $\mathbb{R}^1$ has the following closed-form expression:
+\begin{align*}
+    W_{p}(\mu,\nu)&=\left(\int^{+\infty}_{-\infty}|U(s)-V(s)|^{p}ds\right)^{1/p}&&\triangleright\int\text{quantity}\times\text{unit distance}\\
+    &=\left(\int^1_0|U^{-1}(t)-V^{-1}(t)|^{p}dt\right)^{1/p},&&\triangleright\int\text{distance}\times\text{unit quantity}
+\end{align*}
+where $U$ and $V$ are the CDFs of $\mu,\nu$ respectively.
+\begin{proof}
+Assuming $\{(x_1,y_1), (x_2,y_2)\}\subset \supp(\gamma^*)\footnote{The support of a probability distribution can be loosely thought of as the closure of the set of possible values of a random variable having that distribution. }, x_1<x_2$, where $\gamma^*$ denotes the optimal transport plan. Given the previous assumption, we claim $y_1\le y_2$.
+
+Supposing that $y_1\le y_2$ is not the case, namely $y_1>y_2$, which yields\footnote{For a more detailed deviation of this inequality in the case of $p>1$, refers to Appendix A in \url{https://arxiv.org/pdf/1509.02237.pdf}} 
+\begin{equation*}
+    |x_1-y_2|^p+|x_2-y_1|^p<|x_1-y_1|^p+|x_2-y_2|^p
+\end{equation*}
+However this inequality suggests that $\{(x_1,y_2), (x_2,y_1)\}\subset \supp(\gamma^*)$, rather than $\{(x_1,y_1), (x_2,y_2)\}\subset \supp(\gamma^*)$, which contradicts the initial assumption, namely the optimality of $\gamma^*$, as it indicates that $\gamma^*$ is no cyclically monotone.
+
+Now, for $x\in\supp(\mu), y\in\supp(\nu)$, we claim that $(x,y)\in\supp(\gamma^*)$ if and only if $U(x)=V(y)$. To see this, note that form the monotonicity property we just built, we deduce that $(x,y)\in\supp(\gamma^*)$ if and only if
+\begin{equation*}
+    \gamma^*(\mathbb{R},(-\infty,y])=\gamma^*((-\infty,x],(-\infty,y])=\gamma^*((-\infty,x],\mathbb{R})
+\end{equation*}
+In turn, the fact that $\gamma^*\in\Gamma(\mu,\nu)$ implies that $\gamma^*((-\infty,x],\mathbb{R})=F(x)$ and $\gamma^*(\mathbb{R},(-\infty,y])=G(y)$. From previous relation, we conclude that
+\begin{equation*}
+    W_{p}(\mu ,\nu )=\left(\inf _{\gamma \in \Gamma (\mu ,\nu )}\int _{M\times M}\mathrm{dist}(x,y)^{p}\gamma (x,y)\mathrm {d}x\mathrm {d}y\right)^{1/p}=\left(\int^1_0|F^{-1}(t)-G^{-1}(t)|^{p}dt\right)^{1/p}
+\end{equation*}
+\end{proof}
+\end{lemma}
+
+\begin{example}
+For one dimensional discrete case, to transport $\nu$ to $\mu$, 
+\begin{enumerate}
+    \item 4 extra squares would be moved from 0 to 1;
+    \item 3 extra squares would be moved from 1 to 2;
+    \item 2 extra squares would be moved from 2 to 3;
+    \item 1 extra squares would be moved from 3 to 4.
+\end{enumerate}
+The ``earth'' need to be moved is exactly the difference between the two CDFs at each location. Therefore the $p$-Wasserstein distance equals to $(\sum|U(s)-V(s)|^{p}ds)^{1/p}=(\sum4^p\times1+3^p\times1+2^p\times1+1^p\times1)^{1/p}$
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.2]{figure/mupdf.png}
+    \includegraphics[scale=0.2]{figure/nupdf.png}
+    \includegraphics[scale=0.2]{figure/mucdf.png}
+    \includegraphics[scale=0.2]{figure/nucdf.png}
+    \caption{Two distribution $\mu$ and $\nu$.}
+    \label{fig:my_label}
+\end{figure}
+\end{example}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.3]{figure/ot.png}
+    \caption{Optimal transport measures the minimal effort required for filling $−µ_1$ with $µ_0$, i.e. transporting one distribution to another.}
+\end{figure}
+
 \begin{remark}
 Relationship between \textbf{KL divergence}, \textbf{JS divergence} and \textbf{Wasserstein distance}:
 \begin{itemize}
     \item Intuitively, KL divergence looks like a distance between two distributions, however $D_{\text{KL}}(p,q)\not=D_{\text{KL}}(q,p)$, namely it is asymmetric. So comes the JS divergence.
     \item When the two distributions are far apart, the KL divergence cannot reflect the distance between the distributions while JS divergence is constant, which is deadly for backpropagation in neural network. Nevertheless, the Wasserstein distance can tackle this drawback of KL/JS divergence, as the optimal transport plan of two distant distributions would always make sense and variable.
+\end{itemize}
+\end{remark}
+
+\begin{remark}
+Advantages of Wasserstein distance:\footnote{Figures in this remark credit to \url{https://www.stat.cmu.edu/~larry/=sml/Opt.pdf}}
+\begin{itemize}
+    \item By leveraging Wasserstein distance, we can get a better average/summary image of two distribution.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=0.2]{figure/average.png}
+        \caption{ Top: Some random circles. Bottom left: Euclidean average of the circles. Bottom right: Wasserstein barycenter.}
+    \end{figure}
+    \item When we are creating a geodesic between two distributions $P_0, P_1$, and $P_t$ interpolates between them, Wasserstein distance can preserve the basic structure of the distribution.
+    \begin{figure}[H]
+        \centering
+        \includegraphics[scale=0.2]{figure/distributiongeo.png}
+        \caption{Top row: Geodesic path from $P_0$ to $P_1$. Bottom row: Euclidean path($P_t=tP_0+(1-t)P_1$) from $P_0$ to $P_1$.}
+    \end{figure}
+    \item Wasserstein distance is insensitive to small wiggles.
 \end{itemize}
 \end{remark}
 
@@ -691,7 +775,7 @@ where $x$ are the values of input over a mini-batch, $C,N,H,W,|G|$ are the chann
     \centering
     \includegraphics[scale=0.4]{figure/normalization.png}
     \caption{Normalization methods. Each subplot shows a feature map tensor, with $N$ as the batch axis, $C$ as the channel axis, and $(H, W)$ as the spatial axes. The pixels in blue are normalized by the same mean and variance, computed by aggregating the values of these pixels.}
-    \label{fig:my_label}
+    % \label{fig:my_label}
 \end{figure}
 
 % \subsection{Optimizer}
@@ -711,7 +795,7 @@ ReLU(rectified linear unit)  & $\operatorname{ReLU}(x)=\max\{0,x\}$            &
 Leaky ReLU               & $\operatorname{Leaky ReLU}(x)=\max\{0.01x,x\}$  & $(-\infty,+\infty)$ & $C^0$\\
 ELU(exponential linear unit)& ${\begin{cases}\alpha \left(e^{x}-1\right)&{\text{if }}x\leq 0\\x&{\text{if }}x>0\end{cases}}$ & $(-\alpha,+\infty)$ & $\begin{cases}C^{1}&{\text{if }}\alpha =1\\C^{0}&{\text{otherwise}}\end{cases}$\\ 
 GELU(gaussian error linear unit)& $\begin{aligned}&{\frac {1}{2}}x\left(1+{\text{erf}}\left({\frac {x}{\sqrt {2}}}\right)\right)\end{aligned}$ & $(-0.17,+\infty)$ & $C^\infty$\\
-Smooth ReLU(Softplus) & \ln(1+e^{x}) &$(0,+\infty)$ & $C^\infty$\\
+Smooth ReLU(Softplus) & $\ln(1+e^{x})$ &$(0,+\infty)$ & $C^\infty$\\
 \hline
 \end{tabular}
 \end{table}
@@ -752,7 +836,40 @@ Activation functions have different mathematical properties:
 \section{Applications}
 \subsection{Deep Learning for Solving Partial Differential Equation}
 \paragraph{Overview.} When we are talking about a deep neural network, the first thing that comes to my mind is that the input/output of the network can be a image. However, in this chapter, we will learn that the neural network can also be a ``image'', in view of the function/mapping nature of a network, whose input and output are the coordinates and pixel value, respectively.
-\subsubsection{PINN\footnote{\url{https://www.osti.gov/servlets/purl/1595805}}}
+
+\begin{definition}
+\boxed{\textbf{Ordinary differential equation}} is a differential equation containing one or more functions of one independent variable and the derivatives of those functions.
+\begin{equation*}
+    a_{0}(x)y+a_{1}(x)y'+a_{2}(x)y''+\cdots +a_{n}(x)y^{(n)}+b(x)=0
+\end{equation*}
+where $a_{0}(x), ..., a_{n}(x)$ and $b(x)$ are arbitrary differentiable functions that do not need to be linear, and $y',\ldots ,y^{(n)}$ are the successive derivatives of the unknown function $y$ of the variable $x$.
+\end{definition}
+
+\begin{example}
+Integrating a curve from a vector field is actually solving the very naive ODE: $\frac{dy}{dt}=v(y,t)$, typically we solve this by Euler method. Solving ODE is not always as simple as integrating.
+\end{example}
+
+\begin{definition}
+\boxed{\textbf{Partial differential equation}} is an equation which imposes relations between the various partial derivatives of a multivariable function. For example:
+\begin{equation*}
+    Au_{xx}+2Bu_{xy}+Cu_{yy}+\cdots {\mbox{(lower order terms)}}=0,
+\end{equation*}
+where the coefficients $A, B, C\cdots$ may depend upon $x$ and $y$.
+\end{definition}
+
+\begin{remark}
+Relationship between ODE and PDE:
+\begin{itemize}
+    \item The differential operation in ODE is only with respect to one variable(not necessarily means the function only has one variable).
+    \item The differential operation in PDE would be related to multiple variable.
+\end{itemize}
+\end{remark}
+
+\begin{example}
+When the equation involves a gradient $\nabla$ or Laplacian $\Delta$, it is a partial differential equation.
+\end{example}
+
+\subsubsection{PINN}\footnote{\url{https://www.osti.gov/servlets/purl/1595805}}
 In one space dimension, the Burger’s equation along with Dirichlet boundary conditions reads as
 \begin{align*}
     u_t+uu_x-\frac{0.01}{\pi}u_{xx}=0 && x\in[-1,1], t\in[0,1]\\
